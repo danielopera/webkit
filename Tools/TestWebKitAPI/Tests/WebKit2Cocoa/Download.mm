@@ -126,7 +126,8 @@ static void runTest(id <WKNavigationDelegate> navigationDelegate, id <_WKDownloa
 
     isDone = false;
     [webView loadRequest:[NSURLRequest requestWithURL:url]];
-    TestWebKitAPI::Util::run(&isDone);
+    bool success = TestWebKitAPI::Util::runWithTimeout(&isDone);
+    EXPECT_TRUE(success);
 }
 
 @interface DownloadNavigationDelegate : NSObject <WKNavigationDelegate>

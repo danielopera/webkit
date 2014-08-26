@@ -42,6 +42,24 @@ void run(bool* done)
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantPast]];
 }
 
+bool runWithTimeout(bool* done)
+{
+    const NSTimeInterval timeout = 2;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    while (!*done && ([timeoutDate laterDate:[NSDate date]] == timeoutDate))
+    {
+        NSDate *beforeDate = [NSDate dateWithTimeIntervalSinceNow:0.1];
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:beforeDate];
+        bool isDebugging = abs([beforeDate timeIntervalSinceNow]) > 0.5;
+        if (isDebugging)
+        {
+            run(done);
+            return true;
+        }
+    }
+    return *done;
+}
+
 void sleep(double seconds)
 {
     usleep(seconds * 1000000);

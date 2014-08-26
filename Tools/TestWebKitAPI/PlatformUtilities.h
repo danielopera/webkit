@@ -40,6 +40,10 @@ namespace Util {
 // Runs a platform runloop until the 'done' is true. 
 void run(bool* done);
 
+#if PLATFORM(MAC)
+bool runWithTimeout(bool* done);
+#endif
+
 #if PLATFORM(WIN)
 bool shouldTranslateMessage(const MSG&);
 #endif
