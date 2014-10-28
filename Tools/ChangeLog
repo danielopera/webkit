@@ -1,3 +1,16 @@
+2014-10-28  Daniel Lazarenko  <danielo@opera.com>
+
+        POST form data is missing with a custom NSURLProtocol
+        https://bugs.webkit.org/show_bug.cgi?id=137299
+
+        Reviewed by NOBODY (OOPS!).
+
+        Test case for using HTTP POST with a custom NSURLProtocol.
+
+        * TestWebKitAPI/Tests/WebKit2ObjC/CustomProtocolsTest.mm:
+        (-[WebKit2CustomProtocolsTest_FormPostBodyExistsProtocol initWithRequest:cachedResponse:client:]):
+        (TestWebKitAPI::TEST):
+
 2014-09-30  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
 
         Remove thirdparty/unittest2 from webkitpy

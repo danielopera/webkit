@@ -6193,6 +6193,7 @@
 		E526AF3F1727F8F200E41781 /* Performance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E526AF3E1727F8F200E41781 /* Performance.cpp */; };
 		E55F497A151B888000BB67DB /* LengthFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E55F4979151B888000BB67DB /* LengthFunctions.cpp */; };
 		E5BA7D63151437CA00FE1E3F /* LengthFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = E5BA7D62151437CA00FE1E3F /* LengthFunctions.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		E666EFEF19E52A14006926CD /* ResourceRequestWithBody.h in Headers */ = {isa = PBXBuildFile; fileRef = E666EFEE19E521BC006926CD /* ResourceRequestWithBody.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EBF5121C1696496C0056BD25 /* JSTypeConversions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF5121A1696496C0056BD25 /* JSTypeConversions.cpp */; };
 		EBF5121D1696496C0056BD25 /* JSTypeConversions.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF5121B1696496C0056BD25 /* JSTypeConversions.h */; };
 		ED2BA83C09A24B91006C0AC4 /* DocumentMarker.h in Headers */ = {isa = PBXBuildFile; fileRef = ED2BA83B09A24B91006C0AC4 /* DocumentMarker.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -13703,6 +13704,7 @@
 		E526AF3E1727F8F200E41781 /* Performance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Performance.cpp; sourceTree = "<group>"; };
 		E55F4979151B888000BB67DB /* LengthFunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LengthFunctions.cpp; sourceTree = "<group>"; };
 		E5BA7D62151437CA00FE1E3F /* LengthFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LengthFunctions.h; sourceTree = "<group>"; };
+		E666EFEE19E521BC006926CD /* ResourceRequestWithBody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResourceRequestWithBody.h; sourceTree = "<group>"; };
 		EB081CD81696084400553730 /* TypeConversions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeConversions.h; sourceTree = "<group>"; };
 		EB081CD91696084400553730 /* TypeConversions.idl */ = {isa = PBXFileReference; lastKnownFileType = text; path = TypeConversions.idl; sourceTree = "<group>"; };
 		EBF5121A1696496C0056BD25 /* JSTypeConversions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSTypeConversions.cpp; sourceTree = "<group>"; };
@@ -16330,6 +16332,7 @@
 				8A81BF8411DCFD9000DA2B98 /* ResourceLoadTiming.h */,
 				514C76670CE923A1007EF3CD /* ResourceRequestBase.cpp */,
 				514C76680CE923A1007EF3CD /* ResourceRequestBase.h */,
+				E666EFEE19E521BC006926CD /* ResourceRequestWithBody.h */,
 				514C76690CE923A1007EF3CD /* ResourceResponseBase.cpp */,
 				514C766A0CE923A1007EF3CD /* ResourceResponseBase.h */,
 				510D4A2D103165EE0049EA54 /* SocketStreamErrorBase.cpp */,
@@ -25736,6 +25739,7 @@
 				7EE6846D12D26E3800E79415 /* ResourceRequest.h in Headers */,
 				514C767D0CE923A1007EF3CD /* ResourceRequestBase.h in Headers */,
 				7EE6846F12D26E3800E79415 /* ResourceRequestCFNet.h in Headers */,
+				E666EFEF19E52A14006926CD /* ResourceRequestWithBody.h in Headers */,
 				7EE6847012D26E3800E79415 /* ResourceResponse.h in Headers */,
 				514C767F0CE923A1007EF3CD /* ResourceResponseBase.h in Headers */,
 				FD3160A512B026F700C1A359 /* Reverb.h in Headers */,

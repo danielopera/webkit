@@ -23,7 +23,7 @@
 #if ENABLE(CUSTOM_PROTOCOLS)
 
 messages -> CustomProtocolManagerProxy {
-    StartLoading(uint64_t customProtocolID, WebCore::ResourceRequest request)
+    StartLoading(uint64_t customProtocolID, WebCore::ResourceRequestWithBody request)
     StopLoading(uint64_t customProtocolID)
 }
 

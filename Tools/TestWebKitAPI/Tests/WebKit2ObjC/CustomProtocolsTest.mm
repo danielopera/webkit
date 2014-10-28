@@ -31,15 +31,41 @@
 #import "TestProtocol.h"
 #import <WebKit/WebKit2.h>
 #import <wtf/RetainPtr.h>
+#import "WTFStringUtilities.h"
 
 #if WK_API_ENABLED
 
 static bool testFinished = false;
 
+
+@interface WebKit2CustomProtocolsTest_FormPostBodyExistsProtocol : TestProtocol
+@end
+
+@implementation WebKit2CustomProtocolsTest_FormPostBodyExistsProtocol
+
+- (instancetype)initWithRequest:(NSURLRequest *)request cachedResponse:(NSCachedURLResponse *)cachedResponse client:(id<NSURLProtocolClient>)client
+{
+    NSData *bodyData = request.HTTPBody;
+    EXPECT_NOT_NULL(bodyData);
+    EXPECT_NULL(request.HTTPBodyStream);
+    if (bodyData != nil) {
+        RetainPtr<NSString> body = adoptNS([[NSString alloc] initWithData:bodyData encoding:NSUTF8StringEncoding]);
+        EXPECT_EQ(String("login=john"), String(body.get()));
+    }
+
+    testFinished = true;
+
+    return [super initWithRequest:request cachedResponse:cachedResponse client:client];
+}
+
+@end
+
+
 namespace TestWebKitAPI {
 
 TEST(WebKit2CustomProtocolsTest, MainResource)
 {
+    testFinished = false;
     [NSURLProtocol registerClass:[TestProtocol class]];
     [WKBrowsingContextController registerSchemeForCustomProtocol:[TestProtocol scheme]];
 
@@ -52,6 +78,25 @@ TEST(WebKit2CustomProtocolsTest, MainResource)
     [wkView.get().browsingContextController loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@://test", [TestProtocol scheme]]]]];
 
     Util::run(&testFinished);
+}
+
+TEST(WebKit2CustomProtocolsTest, FormPostBodyExists)
+{
+    testFinished = false;
+    [NSURLProtocol registerClass:[WebKit2CustomProtocolsTest_FormPostBodyExistsProtocol class]];
+    [WKBrowsingContextController registerSchemeForCustomProtocol:[TestProtocol scheme]];
+
+    RetainPtr<WKProcessGroup> processGroup = adoptNS([[WKProcessGroup alloc] init]);
+    RetainPtr<WKBrowsingContextGroup> browsingContextGroup = adoptNS([[WKBrowsingContextGroup alloc] initWithIdentifier:@"TestIdentifier"]);
+    RetainPtr<WKView> wkView = adoptNS([[WKView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600) processGroup:processGroup.get() browsingContextGroup:browsingContextGroup.get()]);
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@://FormPostBodyExists", [TestProtocol scheme]]];
+    NSString *html = [NSString stringWithFormat:@"<html><body onload=\"document.getElementById('f').submit()\"><form id=\"f\" action=\"%@\" method=\"post\"><input name=\"login\" value=\"john\" /></form></body></html>", url.absoluteString];
+    [wkView.get().browsingContextController loadHTMLString:html baseURL:nil];
+
+    Util::run(&testFinished);
+    [NSURLProtocol unregisterClass:[WebKit2CustomProtocolsTest_FormPostBodyExistsProtocol class]];
+    [WKBrowsingContextController unregisterSchemeForCustomProtocol:[TestProtocol scheme]];
 }
 
 } // namespace TestWebKitAPI

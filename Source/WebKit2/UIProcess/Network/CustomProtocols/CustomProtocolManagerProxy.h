@@ -37,7 +37,7 @@ OBJC_CLASS WKCustomProtocolLoader;
 #endif
 
 namespace WebCore {
-class ResourceRequest;
+class ResourceRequestWithBody;
 } // namespace WebCore
 
 namespace WebKit {
@@ -49,7 +49,7 @@ class CustomProtocolManagerProxy : public IPC::MessageReceiver {
 public:
     explicit CustomProtocolManagerProxy(ChildProcessProxy*, WebContext&);
 
-    void startLoading(uint64_t customProtocolID, const WebCore::ResourceRequest&);
+    void startLoading(uint64_t customProtocolID, const WebCore::ResourceRequestWithBody&);
     void stopLoading(uint64_t customProtocolID);
 
 private:

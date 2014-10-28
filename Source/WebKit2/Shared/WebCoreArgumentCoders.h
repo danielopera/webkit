@@ -57,6 +57,7 @@ class ProtectionSpace;
 class Region;
 class ResourceError;
 class ResourceRequest;
+class ResourceRequestWithBody;
 class ResourceResponse;
 class SessionID;
 class StepsTimingFunction;
@@ -250,6 +251,15 @@ template<> struct ArgumentCoder<WebCore::ResourceRequest> {
     static void encodePlatformData(ArgumentEncoder&, const WebCore::ResourceRequest&);
     static bool decodePlatformData(ArgumentDecoder&, WebCore::ResourceRequest&);
 };
+
+#if ENABLE(CUSTOM_PROTOCOLS)
+template<> struct ArgumentCoder<WebCore::ResourceRequestWithBody> {
+    static void encode(ArgumentEncoder&, const WebCore::ResourceRequestWithBody&);
+    static bool decode(ArgumentDecoder&, WebCore::ResourceRequestWithBody&);
+    static void encodePlatformData(ArgumentEncoder&, const WebCore::ResourceRequestWithBody&);
+    static bool decodePlatformData(ArgumentDecoder&, WebCore::ResourceRequestWithBody&);
+};
+#endif // ENABLE(CUSTOM_PROTOCOLS)
 
 template<> struct ArgumentCoder<WebCore::ResourceError> {
     static void encode(ArgumentEncoder&, const WebCore::ResourceError&);

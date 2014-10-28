@@ -36,6 +36,7 @@
 #import "WebCoreArgumentCoders.h"
 #import <WebCore/ResourceError.h>
 #import <WebCore/ResourceRequest.h>
+#import <WebCore/ResourceRequestWithBody.h>
 #import <WebCore/ResourceResponse.h>
 
 using namespace IPC;
@@ -130,8 +131,9 @@ CustomProtocolManagerProxy::CustomProtocolManagerProxy(ChildProcessProxy* childP
     m_childProcessProxy->addMessageReceiver(Messages::CustomProtocolManagerProxy::messageReceiverName(), *this);
 }
 
-void CustomProtocolManagerProxy::startLoading(uint64_t customProtocolID, const ResourceRequest& coreRequest)
+void CustomProtocolManagerProxy::startLoading(uint64_t customProtocolID, const ResourceRequestWithBody& coreRequestWithBody)
 {
+    const ResourceRequest& coreRequest = coreRequestWithBody.request();
     NSURLRequest *request = coreRequest.nsURLRequest(DoNotUpdateHTTPBody);
     if (!request)
         return;

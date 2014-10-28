@@ -37,6 +37,7 @@
 #import <WebCore/URL.h>
 #import <WebCore/ResourceError.h>
 #import <WebCore/ResourceRequest.h>
+#import <WebCore/ResourceRequestWithBody.h>
 #import <WebCore/ResourceResponse.h>
 
 #if ENABLE(NETWORK_PROCESS)
@@ -106,7 +107,8 @@ static uint64_t generateCustomProtocolID()
 
 - (void)startLoading
 {
-    sharedCustomProtocolManager->childProcess()->send(Messages::CustomProtocolManagerProxy::StartLoading(self.customProtocolID, [self request]), 0);
+    WebCore::ResourceRequestWithBody coreRequestWithBody([self request]);
+    sharedCustomProtocolManager->childProcess()->send(Messages::CustomProtocolManagerProxy::StartLoading(self.customProtocolID, coreRequestWithBody), 0);
 }
 
 - (void)stopLoading

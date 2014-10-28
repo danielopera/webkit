@@ -54,6 +54,7 @@
 #include <WebCore/Region.h>
 #include <WebCore/ResourceError.h>
 #include <WebCore/ResourceRequest.h>
+#include <WebCore/ResourceRequestWithBody.h>
 #include <WebCore/ResourceResponse.h>
 #include <WebCore/ScrollingConstraints.h>
 #include <WebCore/ScrollingCoordinator.h>
@@ -701,7 +702,8 @@ bool ArgumentCoder<Cursor>::decode(ArgumentDecoder& decoder, Cursor& cursor)
 }
 #endif
 
-void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
+template<class TResourceRequest>
+void EncodeResourceRequestArgument(ArgumentEncoder& encoder, const TResourceRequest& resourceRequest)
 {
 #if ENABLE(CACHE_PARTITIONING)
     encoder << resourceRequest.cachePartition();
@@ -713,11 +715,16 @@ void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const Reso
 
     if (resourceRequest.encodingRequiresPlatformData()) {
         encoder << true;
-        encodePlatformData(encoder, resourceRequest);
+        ArgumentCoder<TResourceRequest>::encodePlatformData(encoder, resourceRequest);
         return;
     }
     encoder << false;
     resourceRequest.encodeWithoutPlatformData(encoder);
+}
+
+void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
+{
+    EncodeResourceRequestArgument(encoder, resourceRequest);
 }
 
 bool ArgumentCoder<ResourceRequest>::decode(ArgumentDecoder& decoder, ResourceRequest& resourceRequest)
@@ -744,6 +751,21 @@ bool ArgumentCoder<ResourceRequest>::decode(ArgumentDecoder& decoder, ResourceRe
 
     return resourceRequest.decodeWithoutPlatformData(decoder);
 }
+
+#if ENABLE(CUSTOM_PROTOCOLS)
+
+void ArgumentCoder<ResourceRequestWithBody>::encode(ArgumentEncoder& encoder, const ResourceRequestWithBody& resourceRequest)
+{
+    EncodeResourceRequestArgument(encoder, resourceRequest);
+}
+
+bool ArgumentCoder<ResourceRequestWithBody>::decode(ArgumentDecoder& decoder, ResourceRequestWithBody& resourceRequest)
+{
+    ResourceRequest& request = const_cast<ResourceRequest&>(resourceRequest.request());
+    return ArgumentCoder<ResourceRequest>::decode(decoder, request);
+}
+
+#endif // ENABLE(CUSTOM_PROTOCOLS)
 
 void ArgumentCoder<ResourceError>::encode(ArgumentEncoder& encoder, const ResourceError& resourceError)
 {

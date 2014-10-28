@@ -37,6 +37,7 @@
 #import <WebCore/ProtectionSpace.h>
 #import <WebCore/ResourceError.h>
 #import <WebCore/ResourceRequest.h>
+#import <WebCore/ResourceRequestWithBody.h>
 
 #if USE(CFNETWORK)
 #import <CFNetwork/CFURLRequest.h>
@@ -47,9 +48,18 @@ using namespace WebCore;
 namespace IPC {
 
 #if USE(CFNETWORK)
-void ArgumentCoder<ResourceRequest>::encodePlatformData(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
+#define XURLRequest CFURLRequestRef
+#define xURLRequest cfURLRequest
+#define XURLRequestCreateSerializableRepresentation WKCFURLRequestCreateSerializableRepresentation
+#else
+#define XURLRequest NSURLRequest
+#define xURLRequest nsURLRequest
+#define XURLRequestCreateSerializableRepresentation WKNSURLRequestCreateSerializableRepresentation
+#endif // USE(CFNETWORK)
+
+static void EncodeResourceRequestArgumentPlatformData(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest, bool shouldStripHTTPBody)
 {
-    RetainPtr<CFURLRequestRef> requestToSerialize = resourceRequest.cfURLRequest(DoNotUpdateHTTPBody);
+    RetainPtr<XURLRequest> requestToSerialize = resourceRequest.xURLRequest(DoNotUpdateHTTPBody);
 
     bool requestIsPresent = requestToSerialize;
     encoder << requestIsPresent;
@@ -59,47 +69,43 @@ void ArgumentCoder<ResourceRequest>::encodePlatformData(ArgumentEncoder& encoder
 
     // We don't send HTTP body over IPC for better performance.
     // Also, it's not always possible to do, as streams can only be created in process that does networking.
+#if USE(CFNETWORK)
     RetainPtr<CFDataRef> requestHTTPBody = adoptCF(CFURLRequestCopyHTTPRequestBody(requestToSerialize.get()));
     RetainPtr<CFReadStreamRef> requestHTTPBodyStream = adoptCF(CFURLRequestCopyHTTPRequestBodyStream(requestToSerialize.get()));
+    CFMutableURLRequestRef mutableRequest = NULL;
     if (requestHTTPBody || requestHTTPBodyStream) {
-        CFMutableURLRequestRef mutableRequest = CFURLRequestCreateMutableCopy(0, requestToSerialize.get());
+        mutableRequest = CFURLRequestCreateMutableCopy(0, requestToSerialize.get());
         requestToSerialize = adoptCF(mutableRequest);
-        CFURLRequestSetHTTPRequestBody(mutableRequest, nil);
-        CFURLRequestSetHTTPRequestBodyStream(mutableRequest, nil);
     }
+    if (requestHTTPBody && shouldStripHTTPBody)
+        CFURLRequestSetHTTPRequestBody(mutableRequest, nil);
+    if (requestHTTPBodyStream)
+        CFURLRequestSetHTTPRequestBodyStream(mutableRequest, nil);
+#else
+    NSData *requestHTTPBody = [requestToSerialize HTTPBody];
+    NSInputStream *requestHTTPBodyStream = [requestToSerialize HTTPBodyStream];
+    NSMutableURLRequest *mutableRequest = nil;
+    if (requestHTTPBody || requestHTTPBodyStream) {
+        mutableRequest = [requestToSerialize mutableCopy];
+        requestToSerialize = adoptNS(mutableRequest);
+    }
+    if (requestHTTPBody && shouldStripHTTPBody)
+        [mutableRequest setHTTPBody:nil];
+    if (requestHTTPBodyStream)
+        [mutableRequest setHTTPBodyStream:nil];
+#endif // USE(CFNETWORK)
 
-    RetainPtr<CFDictionaryRef> dictionary = adoptCF(WKCFURLRequestCreateSerializableRepresentation(requestToSerialize.get(), IPC::tokenNullTypeRef()));
+    RetainPtr<CFDictionaryRef> dictionary = adoptCF(XURLRequestCreateSerializableRepresentation(requestToSerialize.get(), IPC::tokenNullTypeRef()));
     IPC::encode(encoder, dictionary.get());
 
-    // The fallback array is part of CFURLRequest, but it is not encoded by WKCFURLRequestCreateSerializableRepresentation.
+    // The fallback array is part of XURLRequest, but it is not encoded by XURLRequestCreateSerializableRepresentation.
     encoder << resourceRequest.responseContentDispositionEncodingFallbackArray();
 }
-#else
+
 void ArgumentCoder<ResourceRequest>::encodePlatformData(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
 {
-    RetainPtr<NSURLRequest> requestToSerialize = resourceRequest.nsURLRequest(DoNotUpdateHTTPBody);
-
-    bool requestIsPresent = requestToSerialize;
-    encoder << requestIsPresent;
-
-    if (!requestIsPresent)
-        return;
-
-    // We don't send HTTP body over IPC for better performance.
-    // Also, it's not always possible to do, as streams can only be created in process that does networking.
-    if ([requestToSerialize HTTPBody] || [requestToSerialize HTTPBodyStream]) {
-        requestToSerialize = adoptNS([requestToSerialize mutableCopy]);
-        [(NSMutableURLRequest *)requestToSerialize setHTTPBody:nil];
-        [(NSMutableURLRequest *)requestToSerialize setHTTPBodyStream:nil];
-    }
-
-    RetainPtr<CFDictionaryRef> dictionary = adoptCF(WKNSURLRequestCreateSerializableRepresentation(requestToSerialize.get(), IPC::tokenNullTypeRef()));
-    IPC::encode(encoder, dictionary.get());
-
-    // The fallback array is part of NSURLRequest, but it is not encoded by WKNSURLRequestCreateSerializableRepresentation.
-    encoder << resourceRequest.responseContentDispositionEncodingFallbackArray();
+    EncodeResourceRequestArgumentPlatformData(encoder, resourceRequest, true);
 }
-#endif
 
 bool ArgumentCoder<ResourceRequest>::decodePlatformData(ArgumentDecoder& decoder, ResourceRequest& resourceRequest)
 {
@@ -142,6 +148,21 @@ bool ArgumentCoder<ResourceRequest>::decodePlatformData(ArgumentDecoder& decoder
 
     return true;
 }
+
+#if ENABLE(CUSTOM_PROTOCOLS)
+
+void ArgumentCoder<ResourceRequestWithBody>::encodePlatformData(ArgumentEncoder& encoder, const ResourceRequestWithBody& resourceRequest)
+{
+    EncodeResourceRequestArgumentPlatformData(encoder, resourceRequest.request(), false);
+}
+
+bool ArgumentCoder<ResourceRequestWithBody>::decodePlatformData(ArgumentDecoder& decoder, ResourceRequestWithBody& resourceRequest)
+{
+    ResourceRequest& request = const_cast<ResourceRequest&>(resourceRequest.request());
+    return ArgumentCoder<ResourceRequest>::decodePlatformData(decoder, request);
+}
+
+#endif // ENABLE(CUSTOM_PROTOCOLS)
 
 void ArgumentCoder<CertificateInfo>::encode(ArgumentEncoder& encoder, const CertificateInfo& certificateInfo)
 {
