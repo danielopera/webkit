@@ -254,6 +254,9 @@ template<> struct ArgumentCoder<WebCore::ResourceRequest> {
     static bool decodePlatformData(ArgumentDecoder&, WebCore::ResourceRequest&);
 };
 
+void EncodeResourceRequestArgument(ArgumentEncoder&, const WebCore::ResourceRequest&, bool shouldStripHTTPBody);
+void EncodeResourceRequestArgumentPlatformData(ArgumentEncoder&, const WebCore::ResourceRequest&, bool shouldStripHTTPBody);
+
 template<> struct ArgumentCoder<WebCore::ResourceError> {
     static void encode(ArgumentEncoder&, const WebCore::ResourceError&);
     static bool decode(ArgumentDecoder&, WebCore::ResourceError&);

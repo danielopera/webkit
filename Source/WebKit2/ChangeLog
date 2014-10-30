@@ -1,3 +1,38 @@
+2015-01-05  Daniel Lazarenko  <danielo@opera.com>
+
+        POST form data is missing with a custom NSURLProtocol
+        https://bugs.webkit.org/show_bug.cgi?id=137299
+
+        Reviewed by NOBODY (OOPS!).
+
+        POST request form data was missing in UIProcess
+        where a custom NSURLProtocol lives,
+        because it was not serialized over IPC.
+
+        This fix allows an HTTP POST body form data to be sent over IPC
+        in the CustomProtocolManagerProxy::StartLoading message.
+        In other cases the HTTP body is stripped as before (for performance reasons).
+
+        In order to trigger a different serialization algorithm for ResourceRequest
+        a parameter is added to ResourceRequest IPC argument encoder,
+        which controls if the NSURLRequest.HTTPBody is stripped.
+        When sending a CustomProtocolManagerProxy::StartLoading message,
+        encode message parameters so that the body is not stripped.
+
+        In addition:
+        Refactor ArgumentCoder<ResourceRequest>::encodePlatformData
+        in order to remove duplicate code.
+
+        * Shared/Network/CustomProtocols/Cocoa/CustomProtocolManagerCocoa.mm:
+        (-[WKCustomProtocol startLoading]):
+        * Shared/WebCoreArgumentCoders.cpp:
+        (IPC::EncodeResourceRequestArgument):
+        (IPC::ArgumentCoder<ResourceRequest>::encode):
+        * Shared/WebCoreArgumentCoders.h:
+        * Shared/mac/WebCoreArgumentCodersMac.mm:
+        (IPC::EncodeResourceRequestArgumentPlatformData):
+        (IPC::ArgumentCoder<ResourceRequest>::encodePlatformData):
+
 2015-01-04  Anders Carlsson  <andersca@apple.com>
 
         Clean up some of the IPC code

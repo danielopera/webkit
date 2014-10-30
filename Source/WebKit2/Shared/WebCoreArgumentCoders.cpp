@@ -680,7 +680,7 @@ bool ArgumentCoder<Cursor>::decode(ArgumentDecoder& decoder, Cursor& cursor)
 }
 #endif
 
-void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
+void EncodeResourceRequestArgument(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest, bool shouldStripHTTPBody)
 {
 #if ENABLE(CACHE_PARTITIONING)
     encoder << resourceRequest.cachePartition();
@@ -692,12 +692,25 @@ void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const Reso
 
     if (resourceRequest.encodingRequiresPlatformData()) {
         encoder << true;
-        encodePlatformData(encoder, resourceRequest);
+        EncodeResourceRequestArgumentPlatformData(encoder, resourceRequest, shouldStripHTTPBody);
         return;
     }
     encoder << false;
     resourceRequest.encodeWithoutPlatformData(encoder);
 }
+
+void ArgumentCoder<ResourceRequest>::encode(ArgumentEncoder& encoder, const ResourceRequest& resourceRequest)
+{
+    EncodeResourceRequestArgument(encoder, resourceRequest, true);
+}
+
+// Platforms which don't implement "shouldStripHTTPBody" option just call ArgumentCoder::encodePlatformData.
+#if !PLATFORM(MAC) && !PLATFORM(IOS)
+void EncodeResourceRequestArgumentPlatformData(ArgumentEncoder& encoder, const WebCore::ResourceRequest& resourceRequest, bool shouldStripHTTPBody)
+{
+    ArgumentCoder<ResourceRequest>::encodePlatformData(encoder, resourceRequest);
+}
+#endif
 
 bool ArgumentCoder<ResourceRequest>::decode(ArgumentDecoder& decoder, ResourceRequest& resourceRequest)
 {

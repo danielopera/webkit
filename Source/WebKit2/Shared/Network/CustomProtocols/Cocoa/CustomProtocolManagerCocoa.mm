@@ -104,7 +104,19 @@ static uint64_t generateCustomProtocolID()
 
 - (void)startLoading
 {
-    sharedCustomProtocolManager->childProcess()->send(Messages::CustomProtocolManagerProxy::StartLoading(self.customProtocolID, [self request]), 0);
+    // Create a StartLoading message.
+    using Messages::CustomProtocolManagerProxy::StartLoading;
+    auto message = StartLoading(self.customProtocolID, [self request]);
+
+    // Encode the message arguments manually to preserve the request HTTP body.
+    auto encoder = std::make_unique<IPC::MessageEncoder>(StartLoading::receiverName(), StartLoading::name(), 0);
+    auto arguments = message.arguments();
+    *encoder << std::get<0>(arguments);
+    IPC::EncodeResourceRequestArgument(*encoder, std::get<1>(arguments), false);
+
+    // Send the message.
+    auto childProcess = sharedCustomProtocolManager->childProcess();
+    childProcess->sendMessage(WTF::move(encoder), 0);
 }
 
 - (void)stopLoading
