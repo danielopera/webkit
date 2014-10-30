@@ -1,3 +1,18 @@
+2014-10-30  Daniel Lazarenko  <danielo@opera.com>
+
+        location.href is not updated on a redirect with a custom protocol
+        https://bugs.webkit.org/show_bug.cgi?id=137302
+
+        Reviewed by NOBODY (OOPS!).
+
+        Test case for a redirect with a custom protocol:
+        "WebKit2CustomProtocolsTest.RedirectChangesURL"
+
+        * TestWebKitAPI/Tests/WebKit2ObjC/CustomProtocolsTest.mm:
+        (+[WebKit2CustomProtocolsTest_RedirectingTestProtocol targetURL]):
+        (-[WebKit2CustomProtocolsTest_RedirectingTestProtocol startLoading]):
+        (TestWebKitAPI::TEST):
+
 2014-09-30  Eva Balazsfalvi  <evab.u-szeged@partner.samsung.com>
 
         Remove thirdparty/unittest2 from webkitpy

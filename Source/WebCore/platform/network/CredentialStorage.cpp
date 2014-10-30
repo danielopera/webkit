@@ -125,10 +125,10 @@ void CredentialStorage::remove(const ProtectionSpace& protectionSpace)
 
 static PathToDefaultProtectionSpaceMap::iterator findDefaultProtectionSpaceForURL(const URL& url)
 {
-    ASSERT(url.protocolIsInHTTPFamily());
-    ASSERT(url.isValid());
-
     PathToDefaultProtectionSpaceMap& map = pathToDefaultProtectionSpaceMap();
+
+    if (!url.isValid() || !url.protocolIsInHTTPFamily())
+        return map.end();
 
     // Don't spend time iterating the path for origins that don't have any credentials.
     if (!originsWithCredentials().contains(originStringFromURL(url)))

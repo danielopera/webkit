@@ -103,6 +103,11 @@ void CustomProtocolManager::didReceiveResponse(uint64_t customProtocolID, const 
     m_impl->didReceiveResponse(customProtocolID, response);
 }
 
+void CustomProtocolManager::didRedirect(uint64_t customProtocolID, const WebCore::ResourceRequest& newRequest, const WebCore::ResourceResponse& redirectResponse)
+{
+    notImplemented();
+}
+
 void CustomProtocolManager::didFinishLoading(uint64_t customProtocolID)
 {
     m_impl->didFinishLoading(customProtocolID);

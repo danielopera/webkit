@@ -1,3 +1,28 @@
+2014-10-30  Daniel Lazarenko  <danielo@opera.com>
+
+        location.href is not updated on a redirect with a custom protocol
+        https://bugs.webkit.org/show_bug.cgi?id=137302
+
+        Reviewed by NOBODY (OOPS!).
+
+        If there's a custom NSURLProtocol, which is redirecting some page,
+        the web view URL was not updated.
+        This was happening because WKCustomProtocolLoader didn't forward
+        a redirect event back to the web process.
+        This adds a new CustomProtocolManager::DidRedirect message.
+        The message is received after an HTTP redirect,
+        and is forwarded to the NSURLProtocol client,
+        which eventually propagates it to the URL update.
+
+        * Shared/Network/CustomProtocols/Cocoa/CustomProtocolManagerCocoa.mm:
+        (WebKit::CustomProtocolManager::didRedirect):
+        * Shared/Network/CustomProtocols/CustomProtocolManager.h:
+        * Shared/Network/CustomProtocols/CustomProtocolManager.messages.in:
+        * Shared/Network/CustomProtocols/soup/CustomProtocolManagerSoup.cpp:
+        (WebKit::CustomProtocolManager::didRedirect):
+        * UIProcess/Network/CustomProtocols/mac/CustomProtocolManagerProxyMac.mm:
+        (-[WKCustomProtocolLoader connection:willSendRequest:redirectResponse:]):
+
 2014-09-30  Gyuyoung Kim  <gyuyoung.kim@samsung.com>
 
         [EFL] Rename TEST_THEME_DIR macro

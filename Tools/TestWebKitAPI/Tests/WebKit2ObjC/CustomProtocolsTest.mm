@@ -24,6 +24,7 @@
  */
 
 #import "config.h"
+#import "JavaScriptTest.h"
 #import "Test.h"
 
 #import "PlatformUtilities.h"
@@ -31,15 +32,51 @@
 #import "TestProtocol.h"
 #import <WebKit/WebKit2.h>
 #import <wtf/RetainPtr.h>
+#import <WebKit/WKViewPrivate.h>
 
 #if WK_API_ENABLED
 
 static bool testFinished = false;
 
+@interface WebKit2CustomProtocolsTest_RedirectingTestProtocol : TestProtocol
+@end
+
+@implementation WebKit2CustomProtocolsTest_RedirectingTestProtocol
+
++ (NSURL *)targetURL
+{
+    return [NSURL URLWithString:[NSString stringWithFormat:@"%@://test", [TestProtocol scheme]]];
+}
+
+- (void)startLoading
+{
+    if (![self.request.URL.host isEqualToString:@"redirect"]) {
+        [super startLoading];
+        return;
+    }
+
+    NSURL *targetURL = [[self class] targetURL];
+    RetainPtr<NSMutableURLRequest> requestPtr = adoptNS([self.request mutableCopy]);
+    NSMutableURLRequest *request = requestPtr.get();
+    request.URL = targetURL;
+
+    NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:targetURL
+                                                          statusCode:302
+                                                         HTTPVersion:@"HTTP/1.0"
+                                                        headerFields:@{ @"Location" : targetURL.absoluteString }];
+    RetainPtr<NSURLResponse> responsePtr = adoptNS(response);
+
+    [self.client URLProtocol:self wasRedirectedToRequest:request redirectResponse:response];
+}
+
+@end
+
+
 namespace TestWebKitAPI {
 
 TEST(WebKit2CustomProtocolsTest, MainResource)
 {
+    testFinished = false;
     [NSURLProtocol registerClass:[TestProtocol class]];
     [WKBrowsingContextController registerSchemeForCustomProtocol:[TestProtocol scheme]];
 
@@ -52,6 +89,29 @@ TEST(WebKit2CustomProtocolsTest, MainResource)
     [wkView.get().browsingContextController loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@://test", [TestProtocol scheme]]]]];
 
     Util::run(&testFinished);
+}
+
+TEST(WebKit2CustomProtocolsTest, RedirectChangesURL)
+{
+    testFinished = false;
+    [NSURLProtocol registerClass:[WebKit2CustomProtocolsTest_RedirectingTestProtocol class]];
+    [WKBrowsingContextController registerSchemeForCustomProtocol:[TestProtocol scheme]];
+
+    RetainPtr<WKProcessGroup> processGroup = adoptNS([[WKProcessGroup alloc] init]);
+    RetainPtr<WKBrowsingContextGroup> browsingContextGroup = adoptNS([[WKBrowsingContextGroup alloc] initWithIdentifier:@"TestIdentifier"]);
+    RetainPtr<WKView> wkView = adoptNS([[WKView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600) processGroup:processGroup.get() browsingContextGroup:browsingContextGroup.get()]);
+
+    wkView.get().browsingContextController.loadDelegate = [[TestBrowsingContextLoadDelegate alloc] initWithBlockToRunOnLoad:^(WKBrowsingContextController *sender)
+    {
+        NSString *targetURLString = [[WebKit2CustomProtocolsTest_RedirectingTestProtocol targetURL] absoluteString];
+        EXPECT_JS_EQ(wkView.get().pageRef, "location.href", [targetURLString UTF8String]);
+        testFinished = true;
+    }];
+    [wkView.get().browsingContextController loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@://redirect", [TestProtocol scheme]]]]];
+
+    Util::run(&testFinished);
+    [NSURLProtocol unregisterClass:[WebKit2CustomProtocolsTest_RedirectingTestProtocol class]];
+    [WKBrowsingContextController unregisterSchemeForCustomProtocol:[TestProtocol scheme]];
 }
 
 } // namespace TestWebKitAPI

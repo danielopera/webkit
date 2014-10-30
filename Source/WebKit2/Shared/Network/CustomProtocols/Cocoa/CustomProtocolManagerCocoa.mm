@@ -248,6 +248,20 @@ void CustomProtocolManager::didReceiveResponse(uint64_t customProtocolID, const 
     });
 }
 
+void CustomProtocolManager::didRedirect(uint64_t customProtocolID, const WebCore::ResourceRequest& newRequest, const WebCore::ResourceResponse& redirectResponse)
+{
+    RetainPtr<WKCustomProtocol> protocol = protocolForID(customProtocolID);
+    if (!protocol)
+        return;
+
+    RetainPtr<NSURLRequest> nsNewRequest = newRequest.nsURLRequest(WebCore::DoNotUpdateHTTPBody);
+    RetainPtr<NSURLResponse> nsRedirectResponse = redirectResponse.nsURLResponse();
+
+    dispatchOnResourceLoaderRunLoop(^ {
+        [[protocol client] URLProtocol:protocol.get() wasRedirectedToRequest:nsNewRequest.get() redirectResponse:nsRedirectResponse.get()];
+    });
+}
+
 void CustomProtocolManager::didFinishLoading(uint64_t customProtocolID)
 {
     RetainPtr<WKCustomProtocol> protocol = protocolForID(customProtocolID);

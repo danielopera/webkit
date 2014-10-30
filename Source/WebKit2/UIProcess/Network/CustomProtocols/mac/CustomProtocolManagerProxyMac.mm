@@ -109,6 +109,19 @@ using namespace WebKit;
 
 - (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)redirectResponse
 {
+    // If it's not a true redirect we can ignore it here.
+    if (!redirectResponse)
+        return request;
+
+    ResourceRequest coreRequest(request);
+    ResourceResponse coreRedirectResponse(redirectResponse);
+    _connection->send(Messages::CustomProtocolManager::DidRedirect(_customProtocolID, coreRequest, coreRedirectResponse), 0);
+
+    // Abandon the current connection, a new protocol connection for "request" will be initiated later.
+    // This cleanup is done because the current WKCustomProtocolLoader instance is not needed anymore,
+    // as the custom protocol is not reused after redirection.
+    _customProtocolManagerProxy->stopLoading(_customProtocolID);
+
     return request;
 }
 
